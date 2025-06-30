@@ -2,7 +2,9 @@
 
 A Flask web application that automatically removes backgrounds from uploaded images and replaces them with your custom background collection.
 
+
 ## 🚀 Quick Start
+![Add a heading](https://github.com/user-attachments/assets/958ff505-6ebd-448a-bb8c-c2215f0b6932)
 
 ### 1. Setup Environment
 
@@ -155,5 +157,5 @@ pip install gunicorn
 # Run with Gunicorn
 gunicorn -w 4 -b 0.0.0.0:5000 app:app
 ```
-
+![image](https://github.com/user-attachments/assets/34b6db3c-96b9-46dd-8979-ab732c375fe3)
 Enjoy creating amazing composite images! 🎉
