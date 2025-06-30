@@ -1,4 +1,4 @@
- from flask import Flask, render_template, request, send_file, jsonify
+from flask import Flask, render_template, request, send_file, jsonify
 from rembg import remove
 from PIL import Image
 import os

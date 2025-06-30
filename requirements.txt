@@ -1,4 +1,4 @@
-Flask==2.3.3
-rembg==2.0.50
-Pillow==10.0.1
-onnxruntime==1.16.0
+Flask
+rembg
+Pillow
+onnxruntime
