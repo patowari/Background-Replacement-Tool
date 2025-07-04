@@ -65,6 +65,46 @@
             gap: 10px;
         }
 
+        .background-selector {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #28a745;
+        }
+
+        .background-selector h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .background-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .background-option {
+            padding: 8px 16px;
+            border: 2px solid #ddd;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .background-option:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .background-option.selected {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
         .upload-area {
             border: 3px dashed #667eea;
             border-radius: 15px;
@@ -142,27 +182,6 @@
             background: #dc3545;
         }
 
-        .progress-container {
-            margin: 20px 0;
-            display: none;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 20px;
-            background: #f0f0f0;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            border-radius: 10px;
-            transition: width 0.3s ease;
-            width: 0%;
-        }
-
         .message {
             padding: 15px;
             border-radius: 8px;
@@ -187,25 +206,39 @@
             display: none;
         }
 
-        .results-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-
         .result-item {
             background: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
+            border-radius: 12px;
+            padding: 20px;
             text-align: center;
             border: 1px solid #e9ecef;
+            margin: 20px 0;
         }
 
         .result-item img {
             max-width: 100%;
-            border-radius: 5px;
+            max-height: 300px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .result-info {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid #e9ecef;
+        }
+
+        .result-info h4 {
+            color: #333;
             margin-bottom: 10px;
+        }
+
+        .result-info p {
+            margin: 5px 0;
+            color: #666;
         }
 
         .loading {
@@ -278,8 +311,16 @@
         <div class="main-content">
             <div class="status-card">
                 <h3>📊 System Status</h3>
-                <p><strong>Background Images:</strong> <span id="bgCount">{{ background_count }}</span> images ready</p>
+                <p><strong>Background Images:</strong> <span id="bgCount">Loading...</span> images ready</p>
                 <p><strong>Status:</strong> <span id="systemStatus">Ready for processing</span></p>
+            </div>
+
+            <div class="background-selector">
+                <h3>🎯 Background Selection</h3>
+                <div class="background-options">
+                    <div class="background-option selected" data-bg="all">All Backgrounds</div>
+                    <div id="backgroundOptions"></div>
+                </div>
             </div>
 
             <div class="upload-area" onclick="document.getElementById('fileInput').click()">
@@ -292,27 +333,15 @@
 
             <div class="loading" id="loading">
                 <div class="spinner"></div>
-                <p>Processing your image with all backgrounds...</p>
+                <p>Processing your image...</p>
                 <p><small>This may take a few moments</small></p>
-            </div>
-
-            <div class="progress-container" id="progressContainer">
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
-                <p id="progressText">Processing...</p>
             </div>
 
             <div class="message" id="message"></div>
 
             <div class="results-section" id="resultsSection">
-                <h3>✨ Generated Images</h3>
-                <div style="margin: 15px 0;">
-                    <button class="btn" id="downloadAllBtn">📦 Download All</button>
-                    <button class="btn btn-secondary" onclick="viewAllResults()">👁️ View All Results</button>
-                    <button class="btn btn-danger" onclick="clearResults()">🗑️ Clear Results</button>
-                </div>
-                <div class="results-grid" id="resultsGrid"></div>
+                <h3>✨ Generated Image</h3>
+                <div id="resultContainer"></div>
             </div>
 
             <div class="feature-list">
@@ -323,20 +352,65 @@
                 </div>
                 <div class="feature-item">
                     <div class="feature-icon">🔄</div>
-                    <h4>Batch Processing</h4>
-                    <p>Process with all backgrounds automatically</p>
+                    <h4>Flexible Processing</h4>
+                    <p>Choose specific background or process all</p>
                 </div>
                 <div class="feature-item">
                     <div class="feature-icon">💾</div>
                     <h4>Easy Download</h4>
-                    <p>Download individual files or all at once</p>
+                    <p>Direct download links for results</p>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        let currentDownloadUrl = null;
+        let selectedBackground = 'all';
+        let backgrounds = [];
+
+        // Load backgrounds on page load
+        window.onload = function() {
+            loadBackgrounds();
+        };
+
+        function loadBackgrounds() {
+            fetch('/list_backgrounds')
+            .then(response => response.json())
+            .then(data => {
+                backgrounds = data.backgrounds || [];
+                document.getElementById('bgCount').textContent = data.count || 0;
+                
+                if (data.count === 0) {
+                    showMessage('⚠️ No background images found! Please add images to the "backgrounds" folder.', 'error');
+                }
+                
+                // Populate background options
+                const optionsContainer = document.getElementById('backgroundOptions');
+                backgrounds.forEach(bg => {
+                    const option = document.createElement('div');
+                    option.className = 'background-option';
+                    option.setAttribute('data-bg', bg.index);
+                    option.textContent = `Background ${bg.index}`;
+                    option.onclick = () => selectBackground(bg.index);
+                    optionsContainer.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading backgrounds:', error);
+                showMessage('Failed to load background information', 'error');
+            });
+        }
+
+        function selectBackground(bgIndex) {
+            selectedBackground = bgIndex;
+            
+            // Update UI
+            document.querySelectorAll('.background-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            document.querySelector(`[data-bg="${bgIndex}"]`).classList.add('selected');
+        }
 
         // File input handling
         document.getElementById('fileInput').addEventListener('change', function(e) {
@@ -371,6 +445,11 @@
         function uploadFile(file) {
             const formData = new FormData();
             formData.append('file', file);
+            
+            // Add background selection if not 'all'
+            if (selectedBackground !== 'all') {
+                formData.append('background', selectedBackground);
+            }
 
             // Show loading
             document.getElementById('loading').style.display = 'block';
@@ -389,12 +468,11 @@
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('systemStatus').textContent = 'Ready for processing';
 
-                if (data.success) {
+                if (data.status === 200) {
                     showMessage(data.message, 'success');
-                    currentDownloadUrl = data.download_url;
-                    displayResults(data.files);
+                    displayResult(data);
                 } else {
-                    showMessage(data.error, 'error');
+                    showMessage(data.message || 'Processing failed', 'error');
                 }
             })
             .catch(error => {
@@ -404,73 +482,41 @@
             });
         }
 
-        function displayResults(files) {
-            const resultsSection = document.getElementById('resultsSection');
-            const resultsGrid = document.getElementById('resultsGrid');
-            const downloadAllBtn = document.getElementById('downloadAllBtn');
+        function displayResult(data) {
+            const resultContainer = document.getElementById('resultContainer');
             
-            resultsGrid.innerHTML = '';
+            // Extract filename from content_url
+            const filename = data.content_url.split('/').pop();
             
-            files.forEach(filename => {
-                const resultItem = document.createElement('div');
-                resultItem.className = 'result-item';
-                resultItem.innerHTML = `
-                    <img src="/download/${filename}" alt="${filename}" style="max-height: 150px;">
-                    <p style="font-size: 0.8rem; margin: 5px 0;">${filename}</p>
-                    <button class="btn" onclick="downloadFile('${filename}')" style="font-size: 0.8rem; padding: 5px 15px;">📥 Download</button>
-                `;
-                resultsGrid.appendChild(resultItem);
-            });
+            resultContainer.innerHTML = `
+                <div class="result-item">
+                    <img src="${data.content_url}" alt="Processed Image" onload="this.style.display='block'" style="display:none;">
+                    <div class="result-info">
+                        <h4>🎉 Processing Complete!</h4>
+                        <p><strong>Content ID:</strong> ${data.content_id}</p>
+                        <p><strong>Filename:</strong> ${filename}</p>
+                        <p><strong>Status:</strong> ${data.status}</p>
+                    </div>
+                    <button class="btn" onclick="downloadFromUrl('${data.content_url}')">📥 Download Image</button>
+                    <button class="btn btn-secondary" onclick="openInNewTab('${data.content_url}')">👁️ View Full Size</button>
+                </div>
+            `;
 
-            // Setup download all button
-            downloadAllBtn.onclick = function() {
-                if (currentDownloadUrl) {
-                    window.location.href = currentDownloadUrl;
-                }
-            };
-
-            resultsSection.style.display = 'block';
+            document.getElementById('resultsSection').style.display = 'block';
         }
 
-        function downloadFile(filename) {
-            window.location.href = `/download/${filename}`;
+        function downloadFromUrl(url) {
+            // Create a temporary anchor element to trigger download
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
 
-        function viewAllResults() {
-            fetch('/results')
-            .then(response => response.json())
-            .then(data => {
-                if (data.files && data.files.length > 0) {
-                    displayResults(data.files);
-                    document.getElementById('resultsSection').style.display = 'block';
-                } else {
-                    showMessage('No results found', 'error');
-                }
-            })
-            .catch(error => {
-                showMessage('Failed to load results: ' + error.message, 'error');
-            });
-        }
-
-        function clearResults() {
-            if (confirm('Are you sure you want to delete all generated images?')) {
-                fetch('/clear_results', {
-                    method: 'POST'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showMessage(data.message, 'success');
-                        document.getElementById('resultsSection').style.display = 'none';
-                        currentDownloadUrl = null;
-                    } else {
-                        showMessage(data.error, 'error');
-                    }
-                })
-                .catch(error => {
-                    showMessage('Failed to clear results: ' + error.message, 'error');
-                });
-            }
+        function openInNewTab(url) {
+            window.open(url, '_blank');
         }
 
         function showMessage(text, type) {
@@ -488,13 +534,8 @@
             document.getElementById('message').style.display = 'none';
         }
 
-        // Check background count on load
-        window.onload = function() {
-            const bgCount = document.getElementById('bgCount').textContent;
-            if (bgCount === '0') {
-                showMessage('⚠️ No background images found! Please add images to the "backgrounds" folder.', 'error');
-            }
-        };
+        // Handle background selection
+        document.querySelector('[data-bg="all"]').onclick = () => selectBackground('all');
     </script>
 </body>
 </html>
