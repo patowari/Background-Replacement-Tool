@@ -182,6 +182,10 @@
             background: #dc3545;
         }
 
+        .btn-success {
+            background: #28a745;
+        }
+
         .message {
             padding: 15px;
             border-radius: 8px;
@@ -281,6 +285,21 @@
             margin-bottom: 10px;
         }
 
+        .multiple-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .multiple-results .result-item {
+            margin: 0;
+        }
+
+        .multiple-results .result-item img {
+            max-height: 200px;
+        }
+
         @media (max-width: 768px) {
             .container {
                 margin: 10px;
@@ -297,6 +316,10 @@
             
             .upload-area {
                 padding: 40px 15px;
+            }
+            
+            .multiple-results {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -318,9 +341,12 @@
             <div class="background-selector">
                 <h3>🎯 Background Selection</h3>
                 <div class="background-options">
-                    <div class="background-option selected" data-bg="all">All Backgrounds</div>
+                    <div class="background-option selected" data-bg="all">🎨 All Backgrounds</div>
                     <div id="backgroundOptions"></div>
                 </div>
+                <p style="margin-top: 10px; font-size: 0.9rem; color: #666;">
+                    <strong>Selected:</strong> <span id="selectedInfo">All backgrounds will be processed</span>
+                </p>
             </div>
 
             <div class="upload-area" onclick="document.getElementById('fileInput').click()">
@@ -340,7 +366,7 @@
             <div class="message" id="message"></div>
 
             <div class="results-section" id="resultsSection">
-                <h3>✨ Generated Image</h3>
+                <h3>✨ Generated Results</h3>
                 <div id="resultContainer"></div>
             </div>
 
@@ -410,6 +436,14 @@
             });
             
             document.querySelector(`[data-bg="${bgIndex}"]`).classList.add('selected');
+            
+            // Update info text
+            const infoText = document.getElementById('selectedInfo');
+            if (bgIndex === 'all') {
+                infoText.textContent = 'All backgrounds will be processed';
+            } else {
+                infoText.textContent = `Background ${bgIndex} will be used`;
+            }
         }
 
         // File input handling
@@ -446,10 +480,8 @@
             const formData = new FormData();
             formData.append('file', file);
             
-            // Add background selection if not 'all'
-            if (selectedBackground !== 'all') {
-                formData.append('background', selectedBackground);
-            }
+            // Always add background parameter - 'all' or specific index
+            formData.append('background', selectedBackground);
 
             // Show loading
             document.getElementById('loading').style.display = 'block';
@@ -485,22 +517,57 @@
         function displayResult(data) {
             const resultContainer = document.getElementById('resultContainer');
             
-            // Extract filename from content_url
-            const filename = data.content_url.split('/').pop();
-            
-            resultContainer.innerHTML = `
-                <div class="result-item">
-                    <img src="${data.content_url}" alt="Processed Image" onload="this.style.display='block'" style="display:none;">
-                    <div class="result-info">
-                        <h4>🎉 Processing Complete!</h4>
-                        <p><strong>Content ID:</strong> ${data.content_id}</p>
-                        <p><strong>Filename:</strong> ${filename}</p>
-                        <p><strong>Status:</strong> ${data.status}</p>
+            if (data.file_count > 1) {
+                // Multiple files - show all image previews
+                let imagesHtml = '';
+                data.files.forEach((filename, index) => {
+                    const imageUrl = `http://localhost:5000/download/${filename}`;
+                    const bgNumber = filename.match(/bg(\d+)/)[1];
+                    const bgName = filename.split('_').pop().replace('.jpg', '');
+                    
+                    imagesHtml += `
+                        <div class="result-item">
+                            <img src="${imageUrl}" alt="Background ${bgNumber}" onload="this.style.display='block'" style="display:none;">
+                            <div class="result-info">
+                                <h4>Background ${bgNumber}</h4>
+                                <p><strong>Name:</strong> ${bgName}</p>
+                                <p><strong>File:</strong> ${filename}</p>
+                            </div>
+                            <button class="btn" onclick="downloadFromUrl('${imageUrl}')">📥 Download</button>
+                            <button class="btn btn-secondary" onclick="openInNewTab('${imageUrl}')">👁️ View</button>
+                        </div>
+                    `;
+                });
+                
+                resultContainer.innerHTML = `
+                    <div class="result-item">
+                        <div class="result-info">
+                            <h4>🎉 Multiple Backgrounds Processed!</h4>
+                            <p><strong>Files Generated:</strong> ${data.file_count} images</p>
+                            <p><strong>Content ID:</strong> ${data.content_id}</p>
+                        </div>
+                        <button class="btn btn-success" onclick="downloadFromUrl('${data.content_url}')">📦 Download All Images (ZIP)</button>
                     </div>
-                    <button class="btn" onclick="downloadFromUrl('${data.content_url}')">📥 Download Image</button>
-                    <button class="btn btn-secondary" onclick="openInNewTab('${data.content_url}')">👁️ View Full Size</button>
-                </div>
-            `;
+                    <div class="multiple-results">
+                        ${imagesHtml}
+                    </div>
+                `;
+            } else {
+                // Single file - show image preview
+                const filename = data.content_url.split('/').pop();
+                resultContainer.innerHTML = `
+                    <div class="result-item">
+                        <img src="${data.content_url}" alt="Processed Image" onload="this.style.display='block'" style="display:none;">
+                        <div class="result-info">
+                            <h4>🎉 Background Replaced!</h4>
+                            <p><strong>Content ID:</strong> ${data.content_id}</p>
+                            <p><strong>Filename:</strong> ${filename}</p>
+                        </div>
+                        <button class="btn" onclick="downloadFromUrl('${data.content_url}')">📥 Download Image</button>
+                        <button class="btn btn-secondary" onclick="openInNewTab('${data.content_url}')">👁️ View Full Size</button>
+                    </div>
+                `;
+            }
 
             document.getElementById('resultsSection').style.display = 'block';
         }
