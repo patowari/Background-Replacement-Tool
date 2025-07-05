@@ -56,6 +56,22 @@ def get_specific_background(background_index):
     
     return background_paths[index]
 
+def fit_subject_to_background(subject_img, background_size):
+    """Fit subject image to background size while maintaining aspect ratio"""
+    subject_ratio = subject_img.width / subject_img.height
+    background_ratio = background_size[0] / background_size[1]
+    
+    if subject_ratio > background_ratio:
+        # Subject is wider relative to background, fit by width
+        new_width = background_size[0]
+        new_height = int(new_width / subject_ratio)
+    else:
+        # Subject is taller relative to background, fit by height
+        new_height = background_size[1]
+        new_width = int(new_height * subject_ratio)
+    
+    return subject_img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
 def process_with_backgrounds(subject_img, output_prefix):
     """Process subject with all background images"""
     background_paths = get_background_images()
@@ -69,11 +85,21 @@ def process_with_backgrounds(subject_img, output_prefix):
             # Load background
             background = Image.open(bg_path).convert("RGBA")
             
-            # Resize background to match subject
-            background = background.resize(subject_img.size, Image.Resampling.LANCZOS)
+            # Fit subject to background while maintaining aspect ratio
+            subject_fitted = fit_subject_to_background(subject_img, background.size)
             
-            # Combine images
-            result = Image.alpha_composite(background, subject_img)
+            # Create a new image with background size
+            result = Image.new("RGBA", background.size, (0, 0, 0, 0))
+            
+            # Paste background
+            result.paste(background, (0, 0))
+            
+            # Calculate position to center the subject
+            x = (background.size[0] - subject_fitted.size[0]) // 2
+            y = (background.size[1] - subject_fitted.size[1]) // 2
+            
+            # Paste subject on top
+            result.paste(subject_fitted, (x, y), subject_fitted)
             
             # Generate filename
             bg_filename = os.path.basename(bg_path)
@@ -102,11 +128,21 @@ def process_with_specific_background(subject_img, output_prefix, background_inde
         # Load background
         background = Image.open(bg_path).convert("RGBA")
         
-        # Resize background to match subject
-        background = background.resize(subject_img.size, Image.Resampling.LANCZOS)
+        # Fit subject to background while maintaining aspect ratio
+        subject_fitted = fit_subject_to_background(subject_img, background.size)
         
-        # Combine images
-        result = Image.alpha_composite(background, subject_img)
+        # Create a new image with background size
+        result = Image.new("RGBA", background.size, (0, 0, 0, 0))
+        
+        # Paste background
+        result.paste(background, (0, 0))
+        
+        # Calculate position to center the subject
+        x = (background.size[0] - subject_fitted.size[0]) // 2
+        y = (background.size[1] - subject_fitted.size[1]) // 2
+        
+        # Paste subject on top
+        result.paste(subject_fitted, (x, y), subject_fitted)
         
         # Generate filename
         bg_filename = os.path.basename(bg_path)
