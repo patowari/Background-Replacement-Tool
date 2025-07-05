@@ -158,17 +158,26 @@ def upload_file():
         # Process based on background parameter
         output_prefix = f"{timestamp}_processed"
         
-        if background_param:
+        # Fixed logic: Check if background_param exists and is not 'all'
+        if background_param and background_param != 'all':
             try:
                 background_index = int(background_param)
                 result_files = process_with_specific_background(subject_img, output_prefix, background_index)
                 message = f'Successfully generated image with background {background_index}'
+                
+                # For single background, return direct download link
+                main_file = result_files[0]
+                content_url = f"http://localhost:5000/download/{main_file}"
+                
             except ValueError:
                 return jsonify({'error': 'Background parameter must be a number'}), 400
         else:
-            # Process with all backgrounds (original behavior)
+            # Process with all backgrounds (when 'all' is selected or no background specified)
             result_files = process_with_backgrounds(subject_img, output_prefix)
-            message = f'Successfully generated {len(result_files)} images'
+            message = f'Successfully generated {len(result_files)} images with all backgrounds'
+            
+            # For multiple backgrounds, provide ZIP download link
+            content_url = f"http://localhost:5000/download_all/{output_prefix}"
         
         # Clean up uploaded file
         os.remove(filepath)
@@ -179,15 +188,14 @@ def upload_file():
         # Generate content_id (using timestamp + random component)
         content_id = int(timestamp.replace('_', '')) + len(result_files)
         
-        # Generate content_url for the first/main result file
-        main_file = result_files[0]
-        content_url = f"http://localhost:5000/download/{main_file}"
-        
         return jsonify({
             'content_id': content_id,
             'content_url': content_url,
-            'message': 'Content uploaded Successfully',
-            'status': 200
+            'message': message,
+            'status': 200,
+            'file_count': len(result_files),
+            'files': result_files,
+            'individual_urls': [f"http://localhost:5000/download/{filename}" for filename in result_files]
         })
         
     except Exception as e:
