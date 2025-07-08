@@ -3,6 +3,7 @@
 A Flask web application that automatically removes backgrounds from uploaded images and replaces them with your custom background collection.
 
 ## 🚀 Quick Start
+![6ffc5183-090a-46b0-a82a-89d4d78ada62](https://github.com/user-attachments/assets/5176c96e-bb4e-4afb-aa63-eeccc1cc137b)
 
 ### 1. Setup Environment
 
