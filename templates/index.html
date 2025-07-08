@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Background Replacement Tool</title>
+    <title>Enhanced Background Replacement Tool</title>
     <style>
         * {
             margin: 0;
@@ -19,7 +19,7 @@
         }
 
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
             background: white;
             border-radius: 20px;
@@ -49,6 +49,33 @@
             padding: 40px;
         }
 
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #f1f3f4;
+            margin-bottom: 30px;
+        }
+
+        .tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            border-bottom-color: #667eea;
+            color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
         .status-card {
             background: #f8f9fa;
             border-radius: 12px;
@@ -63,6 +90,116 @@
             display: flex;
             align-items: center;
             gap: 10px;
+        }
+
+        .background-selector {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #28a745;
+        }
+
+        .background-selector h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .background-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .background-item {
+            border: 3px solid #ddd;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+            position: relative;
+        }
+
+        .background-item:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .background-item.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .background-item.all-option {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 150px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .background-preview {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+        }
+
+        .background-info {
+            padding: 10px;
+        }
+
+        .background-info h4 {
+            font-size: 0.9rem;
+            color: #333;
+            margin-bottom: 5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .background-info p {
+            font-size: 0.8rem;
+            color: #666;
+            margin: 2px 0;
+        }
+
+        .background-actions {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            display: flex;
+            gap: 5px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .background-item:hover .background-actions {
+            opacity: 1;
+        }
+
+        .action-btn {
+            padding: 5px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn.delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .action-btn.preview {
+            background: #007bff;
+            color: white;
         }
 
         .upload-area {
@@ -104,7 +241,7 @@
             font-size: 0.9rem;
         }
 
-        #fileInput {
+        #fileInput, #backgroundInput {
             display: none;
         }
 
@@ -142,25 +279,19 @@
             background: #dc3545;
         }
 
-        .progress-container {
-            margin: 20px 0;
-            display: none;
+        .btn-success {
+            background: #28a745;
         }
 
-        .progress-bar {
-            width: 100%;
-            height: 20px;
-            background: #f0f0f0;
-            border-radius: 10px;
-            overflow: hidden;
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #667eea;
+            color: #667eea;
         }
 
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            border-radius: 10px;
-            transition: width 0.3s ease;
-            width: 0%;
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
         }
 
         .message {
@@ -187,25 +318,39 @@
             display: none;
         }
 
-        .results-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-
         .result-item {
             background: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
+            border-radius: 12px;
+            padding: 20px;
             text-align: center;
             border: 1px solid #e9ecef;
+            margin: 20px 0;
         }
 
         .result-item img {
             max-width: 100%;
-            border-radius: 5px;
+            max-height: 300px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .result-info {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid #e9ecef;
+        }
+
+        .result-info h4 {
+            color: #333;
             margin-bottom: 10px;
+        }
+
+        .result-info p {
+            margin: 5px 0;
+            color: #666;
         }
 
         .loading {
@@ -248,6 +393,92 @@
             margin-bottom: 10px;
         }
 
+        .multiple-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .multiple-results .result-item {
+            margin: 0;
+        }
+
+        .multiple-results .result-item img {
+            max-height: 200px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .close {
+            color: #999;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .upload-background-area {
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 20px 0;
+        }
+
+        .upload-background-area:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .background-management {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .management-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
         @media (max-width: 768px) {
             .container {
                 margin: 10px;
@@ -265,87 +496,476 @@
             .upload-area {
                 padding: 40px 15px;
             }
+            
+            .background-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+            
+            .multiple-results {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+            }
+
+            .tab {
+                flex: 1;
+                min-width: 120px;
+                text-align: center;
+            }
+
+            .background-management {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎨 Background Replacement</h1>
-            <p>Upload your image and automatically replace backgrounds</p>
+            <h1>🎨 Enhanced Background Replacement</h1>
+            <p>Upload images, manage backgrounds, and create amazing compositions</p>
         </div>
 
         <div class="main-content">
-            <div class="status-card">
-                <h3>📊 System Status</h3>
-                <p><strong>Background Images:</strong> <span id="bgCount">{{ background_count }}</span> images ready</p>
-                <p><strong>Status:</strong> <span id="systemStatus">Ready for processing</span></p>
+            <!-- Tab Navigation -->
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('process')">🖼️ Process Images</div>
+                <div class="tab" onclick="switchTab('manage')">⚙️ Manage Backgrounds</div>
+                <div class="tab" onclick="switchTab('gallery')">🎨 Gallery</div>
             </div>
 
-            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
-                <div class="upload-icon">📁</div>
-                <div class="upload-text">Click to select an image or drag & drop</div>
-                <div class="upload-hint">Supports: PNG, JPG, JPEG, GIF, BMP</div>
-            </div>
-
-            <input type="file" id="fileInput" accept="image/*">
-
-            <div class="loading" id="loading">
-                <div class="spinner"></div>
-                <p>Processing your image with all backgrounds...</p>
-                <p><small>This may take a few moments</small></p>
-            </div>
-
-            <div class="progress-container" id="progressContainer">
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
+            <!-- Process Images Tab -->
+            <div id="processTab" class="tab-content active">
+                <div class="status-card">
+                    <h3>📊 System Status</h3>
+                    <p><strong>Background Images:</strong> <span id="bgCount">Loading...</span> images ready</p>
+                    <p><strong>Status:</strong> <span id="systemStatus">Ready for processing</span></p>
                 </div>
-                <p id="progressText">Processing...</p>
+
+                <div class="background-selector">
+                    <h3>🎯 Background Selection</h3>
+                    <div class="background-grid" id="backgroundGrid">
+                        <div class="background-item all-option selected" data-bg="all">
+                            <div>🎨 Process All Backgrounds</div>
+                        </div>
+                    </div>
+                    <p style="margin-top: 15px; font-size: 0.9rem; color: #666;">
+                        <strong>Selected:</strong> <span id="selectedInfo">All backgrounds will be processed</span>
+                    </p>
+                </div>
+
+                <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-text">Click to select an image or drag & drop</div>
+                    <div class="upload-hint">Supports: PNG, JPG, JPEG, GIF, BMP</div>
+                </div>
+
+                <input type="file" id="fileInput" accept="image/*">
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Processing your image...</p>
+                    <p><small>This may take a few moments</small></p>
+                </div>
+
+                <div class="message" id="message"></div>
+
+                <div class="results-section" id="resultsSection">
+                    <h3>✨ Generated Results</h3>
+                    <div id="resultContainer"></div>
+                </div>
             </div>
 
-            <div class="message" id="message"></div>
-
-            <div class="results-section" id="resultsSection">
-                <h3>✨ Generated Images</h3>
-                <div style="margin: 15px 0;">
-                    <button class="btn" id="downloadAllBtn">📦 Download All</button>
-                    <button class="btn btn-secondary" onclick="viewAllResults()">👁️ View All Results</button>
-                    <button class="btn btn-danger" onclick="clearResults()">🗑️ Clear Results</button>
+            <!-- Manage Backgrounds Tab -->
+            <div id="manageTab" class="tab-content">
+                <div class="background-management">
+                    <div>
+                        <h3>📁 Background Library</h3>
+                        <div class="upload-background-area" onclick="document.getElementById('backgroundInput').click()">
+                            <div style="font-size: 2rem; margin-bottom: 10px;">📤</div>
+                            <div style="font-size: 1.1rem; margin-bottom: 5px;">Upload New Background</div>
+                            <div style="font-size: 0.9rem; color: #666;">Click here or drag & drop background images</div>
+                        </div>
+                        <input type="file" id="backgroundInput" accept="image/*">
+                        
+                        <div class="message" id="backgroundMessage"></div>
+                        
+                        <div class="background-grid" id="managementGrid">
+                            <!-- Background items will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <div class="management-actions">
+                        <button class="btn btn-outline" onclick="refreshBackgrounds()">🔄 Refresh</button>
+                        <button class="btn btn-danger" onclick="clearAllBackgrounds()">🗑️ Clear All</button>
+                        <button class="btn btn-secondary" onclick="showHelpModal()">❓ Help</button>
+                    </div>
                 </div>
-                <div class="results-grid" id="resultsGrid"></div>
             </div>
 
-            <div class="feature-list">
-                <div class="feature-item">
-                    <div class="feature-icon">🤖</div>
-                    <h4>AI Background Removal</h4>
-                    <p>Automatic background detection and removal</p>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-icon">🔄</div>
-                    <h4>Batch Processing</h4>
-                    <p>Process with all backgrounds automatically</p>
-                </div>
-                <div class="feature-item">
-                    <div class="feature-icon">💾</div>
-                    <h4>Easy Download</h4>
-                    <p>Download individual files or all at once</p>
+            <!-- Gallery Tab -->
+            <div id="galleryTab" class="tab-content">
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <div class="feature-icon">🤖</div>
+                        <h4>AI Background Removal</h4>
+                        <p>Automatic background detection and removal using advanced AI</p>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🔄</div>
+                        <h4>Flexible Processing</h4>
+                        <p>Choose specific backgrounds or process with all available options</p>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">📱</div>
+                        <h4>Mobile Responsive</h4>
+                        <p>Works perfectly on desktop, tablet, and mobile devices</p>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">⚡</div>
+                        <h4>Fast Processing</h4>
+                        <p>Optimized algorithms for quick image processing and generation</p>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🎨</div>
+                        <h4>Custom Backgrounds</h4>
+                        <p>Upload and manage your own background collection</p>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">💾</div>
+                        <h4>Multiple Formats</h4>
+                        <p>Download individual images or complete ZIP archives</p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        let currentDownloadUrl = null;
+    <!-- Preview Modal -->
+    <div id="previewModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Background Preview</h3>
+                <span class="close" onclick="closeModal('previewModal')">&times;</span>
+            </div>
+            <div id="previewContent">
+                <!-- Preview content will be loaded here -->
+            </div>
+        </div>
+    </div>
 
-        // File input handling
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>How to Use</h3>
+                <span class="close" onclick="closeModal('helpModal')">&times;</span>
+            </div>
+            <div>
+                <h4>🖼️ Processing Images</h4>
+                <p>1. Select backgrounds you want to use (or choose "All Backgrounds")</p>
+                <p>2. Upload your subject image by clicking or dragging into the upload area</p>
+                <p>3. Wait for processing to complete and download your results</p>
+                
+                <h4 style="margin-top: 20px;">⚙️ Managing Backgrounds</h4>
+                <p>1. Upload new backgrounds using the upload area</p>
+                <p>2. Preview backgrounds by clicking on them</p>
+                <p>3. Delete unwanted backgrounds using the delete button</p>
+                <p>4. Use "Clear All" to remove all backgrounds at once</p>
+                
+                <h4 style="margin-top: 20px;">💡 Tips</h4>
+                <p>• Use high-quality background images for best results</p>
+                <p>• Subject images work best with clear, well-defined subjects</p>
+                <p>• The app automatically centers and fits subjects to backgrounds</p>
+                <p>• All generated images are saved as high-quality JPEGs</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedBackground = 'all';
+        let backgrounds = [];
+
+        // Load backgrounds on page load
+        window.onload = function() {
+            loadBackgrounds();
+        };
+
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+            
+            // Load backgrounds for management tab
+            if (tabName === 'manage') {
+                loadManagementBackgrounds();
+            }
+        }
+
+        function loadBackgrounds() {
+            fetch('/list_backgrounds')
+            .then(response => response.json())
+            .then(data => {
+                backgrounds = data.backgrounds || [];
+                document.getElementById('bgCount').textContent = data.count || 0;
+                
+                if (data.count === 0) {
+                    showMessage('⚠️ No background images found! Please add images in the "Manage Backgrounds" tab.', 'error');
+                }
+                
+                // Populate background grid
+                populateBackgroundGrid(data.backgrounds);
+            })
+            .catch(error => {
+                console.error('Error loading backgrounds:', error);
+                showMessage('Failed to load background information', 'error');
+            });
+        }
+
+        function populateBackgroundGrid(backgrounds) {
+            const grid = document.getElementById('backgroundGrid');
+            
+            // Keep the "All Backgrounds" option and clear the rest
+            const allOption = grid.querySelector('.all-option');
+            grid.innerHTML = '';
+            grid.appendChild(allOption);
+            
+            backgrounds.forEach(bg => {
+                const item = document.createElement('div');
+                item.className = 'background-item';
+                item.setAttribute('data-bg', bg.index);
+                item.onclick = () => selectBackground(bg.index);
+                
+                item.innerHTML = `
+                    <img src="${bg.preview_url}" alt="${bg.name}" class="background-preview" 
+                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlPC90ZXh0Pjwvc3ZnPg=='">
+                    <div class="background-info">
+                        <h4>Background ${bg.index}</h4>
+                        <p>${bg.dimensions}</p>
+                        <p>${(bg.size / 1024).toFixed(1)} KB</p>
+                    </div>
+                `;
+                
+                grid.appendChild(item);
+            });
+        }
+
+        function loadManagementBackgrounds() {
+            fetch('/list_backgrounds')
+            .then(response => response.json())
+            .then(data => {
+                populateManagementGrid(data.backgrounds);
+            })
+            .catch(error => {
+                console.error('Error loading backgrounds for management:', error);
+            });
+        }
+
+        function populateManagementGrid(backgrounds) {
+            const grid = document.getElementById('managementGrid');
+            grid.innerHTML = '';
+            
+            if (backgrounds.length === 0) {
+                grid.innerHTML = '<p style="text-align: center; color: #666; grid-column: 1/-1;">No backgrounds uploaded yet. Upload your first background above!</p>';
+                return;
+            }
+            
+            backgrounds.forEach(bg => {
+                const item = document.createElement('div');
+                item.className = 'background-item';
+                
+                item.innerHTML = `
+                    <img src="${bg.preview_url}" alt="${bg.name}" class="background-preview"
+                         onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgZmlsbD0iI2Y4ZjlmYSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlPC90ZXh0Pjwvc3ZnPg=='">
+                    <div class="background-info">
+                        <h4>${bg.name}</h4>
+                        <p>${bg.dimensions}</p>
+                        <p>${(bg.size / 1024).toFixed(1)} KB</p>
+                    </div>
+                    <div class="background-actions">
+                        <button class="action-btn preview" onclick="previewBackground('${bg.filename}', '${bg.preview_url}', event)">👁️</button>
+                        <button class="action-btn delete" onclick="deleteBackground('${bg.filename}', event)">🗑️</button>
+                    </div>
+                `;
+                
+                grid.appendChild(item);
+            });
+        }
+
+        function selectBackground(bgIndex) {
+            selectedBackground = bgIndex;
+            
+            // Update UI
+            document.querySelectorAll('#backgroundGrid .background-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            document.querySelector(`#backgroundGrid [data-bg="${bgIndex}"]`).classList.add('selected');
+            
+            // Update info text
+            const infoText = document.getElementById('selectedInfo');
+            if (bgIndex === 'all') {
+                infoText.textContent = 'All backgrounds will be processed';
+            } else {
+                infoText.textContent = `Background ${bgIndex} will be used`;
+            }
+        }
+
+        // Background upload handling
+        document.getElementById('backgroundInput').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                uploadBackground(e.target.files[0]);
+            }
+        });
+
+        // Background upload drag and drop
+        const backgroundUploadArea = document.querySelector('.upload-background-area');
+        
+        backgroundUploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#28a745';
+            this.style.background = '#f0fff4';
+        });
+
+        backgroundUploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#ddd';
+            this.style.background = 'transparent';
+        });
+
+        backgroundUploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#ddd';
+            this.style.background = 'transparent';
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                uploadBackground(files[0]);
+            }
+        });
+
+        function uploadBackground(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            showBackgroundMessage('Uploading background...', 'success');
+
+            fetch('/upload_background', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showBackgroundMessage(data.message, 'success');
+                    loadManagementBackgrounds();
+                    loadBackgrounds(); // Refresh main background list
+                } else {
+                    showBackgroundMessage(data.error || 'Upload failed', 'error');
+                }
+            })
+            .catch(error => {
+                showBackgroundMessage('Upload failed: ' + error.message, 'error');
+            });
+        }
+
+        function deleteBackground(filename, event) {
+            event.stopPropagation();
+            
+            if (confirm(`Are you sure you want to delete "${filename}"?`)) {
+                fetch(`/delete_background/${filename}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showBackgroundMessage(data.message, 'success');
+                        loadManagementBackgrounds();
+                        loadBackgrounds(); // Refresh main background list
+                    } else {
+                        showBackgroundMessage(data.error || 'Delete failed', 'error');
+                    }
+                })
+                .catch(error => {
+                    showBackgroundMessage('Delete failed: ' + error.message, 'error');
+                });
+            }
+        }
+
+        function previewBackground(filename, previewUrl, event) {
+            event.stopPropagation();
+            
+            const modal = document.getElementById('previewModal');
+            const content = document.getElementById('previewContent');
+            
+            content.innerHTML = `
+                <div style="text-align: center;">
+                    <img src="${previewUrl}" alt="${filename}" style="max-width: 100%; max-height: 60vh; border-radius: 8px; margin-bottom: 15px;">
+                    <h4>${filename}</h4>
+                    <p style="color: #666;">Preview of background image</p>
+                </div>
+            `;
+            
+            modal.style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function showHelpModal() {
+            document.getElementById('helpModal').style.display = 'block';
+        }
+
+        function clearAllBackgrounds() {
+            if (confirm('Are you sure you want to delete ALL background images? This action cannot be undone.')) {
+                fetch('/clear_backgrounds', {
+                    method: 'POST'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showBackgroundMessage(data.message, 'success');
+                        loadManagementBackgrounds();
+                        loadBackgrounds();
+                    } else {
+                        showBackgroundMessage(data.error || 'Clear failed', 'error');
+                    }
+                })
+                .catch(error => {
+                    showBackgroundMessage('Clear failed: ' + error.message, 'error');
+                });
+            }
+        }
+
+        function refreshBackgrounds() {
+            loadManagementBackgrounds();
+            loadBackgrounds();
+            showBackgroundMessage('Backgrounds refreshed!', 'success');
+        }
+
+        // File input handling for main upload
         document.getElementById('fileInput').addEventListener('change', function(e) {
             if (e.target.files.length > 0) {
                 uploadFile(e.target.files[0]);
             }
         });
 
-        // Drag and drop functionality
+        // Drag and drop functionality for main upload
         const uploadArea = document.querySelector('.upload-area');
         
         uploadArea.addEventListener('dragover', function(e) {
@@ -371,6 +991,9 @@
         function uploadFile(file) {
             const formData = new FormData();
             formData.append('file', file);
+            
+            // Always add background parameter - 'all' or specific index
+            formData.append('background', selectedBackground);
 
             // Show loading
             document.getElementById('loading').style.display = 'block';
@@ -389,12 +1012,11 @@
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('systemStatus').textContent = 'Ready for processing';
 
-                if (data.success) {
+                if (data.status === 200) {
                     showMessage(data.message, 'success');
-                    currentDownloadUrl = data.download_url;
-                    displayResults(data.files);
+                    displayResult(data);
                 } else {
-                    showMessage(data.error, 'error');
+                    showMessage(data.message || 'Processing failed', 'error');
                 }
             })
             .catch(error => {
@@ -404,73 +1026,72 @@
             });
         }
 
-        function displayResults(files) {
-            const resultsSection = document.getElementById('resultsSection');
-            const resultsGrid = document.getElementById('resultsGrid');
-            const downloadAllBtn = document.getElementById('downloadAllBtn');
+        function displayResult(data) {
+            const resultContainer = document.getElementById('resultContainer');
             
-            resultsGrid.innerHTML = '';
-            
-            files.forEach(filename => {
-                const resultItem = document.createElement('div');
-                resultItem.className = 'result-item';
-                resultItem.innerHTML = `
-                    <img src="/download/${filename}" alt="${filename}" style="max-height: 150px;">
-                    <p style="font-size: 0.8rem; margin: 5px 0;">${filename}</p>
-                    <button class="btn" onclick="downloadFile('${filename}')" style="font-size: 0.8rem; padding: 5px 15px;">📥 Download</button>
-                `;
-                resultsGrid.appendChild(resultItem);
-            });
-
-            // Setup download all button
-            downloadAllBtn.onclick = function() {
-                if (currentDownloadUrl) {
-                    window.location.href = currentDownloadUrl;
-                }
-            };
-
-            resultsSection.style.display = 'block';
-        }
-
-        function downloadFile(filename) {
-            window.location.href = `/download/${filename}`;
-        }
-
-        function viewAllResults() {
-            fetch('/results')
-            .then(response => response.json())
-            .then(data => {
-                if (data.files && data.files.length > 0) {
-                    displayResults(data.files);
-                    document.getElementById('resultsSection').style.display = 'block';
-                } else {
-                    showMessage('No results found', 'error');
-                }
-            })
-            .catch(error => {
-                showMessage('Failed to load results: ' + error.message, 'error');
-            });
-        }
-
-        function clearResults() {
-            if (confirm('Are you sure you want to delete all generated images?')) {
-                fetch('/clear_results', {
-                    method: 'POST'
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showMessage(data.message, 'success');
-                        document.getElementById('resultsSection').style.display = 'none';
-                        currentDownloadUrl = null;
-                    } else {
-                        showMessage(data.error, 'error');
-                    }
-                })
-                .catch(error => {
-                    showMessage('Failed to clear results: ' + error.message, 'error');
+            if (data.file_count > 1) {
+                // Multiple files - show all image previews
+                let imagesHtml = '';
+                data.files.forEach((filename, index) => {
+                    const imageUrl = `http://localhost:5000/download/${filename}`;
+                    const bgNumber = filename.match(/bg(\d+)/)[1];
+                    
+                    imagesHtml += `
+                        <div class="result-item">
+                            <img src="${imageUrl}" alt="Background ${bgNumber}" onload="this.style.display='block'" style="display:none;">
+                            <div class="result-info">
+                                <h4>Background ${bgNumber}</h4>
+                            </div>
+                            <button class="btn" onclick="downloadFromUrl('${imageUrl}')">📥 Download</button>
+                            <button class="btn btn-secondary" onclick="openInNewTab('${imageUrl}')">👁️ View</button>
+                        </div>
+                    `;
                 });
+                
+                resultContainer.innerHTML = `
+                    <div class="result-item">
+                        <div class="result-info">
+                            <h4>🎉 Multiple Backgrounds Processed!</h4>
+                            <p><strong>Files Generated:</strong> ${data.file_count} images</p>
+                            <p><strong>Content ID:</strong> ${data.content_id}</p>
+                        </div>
+                        <button class="btn btn-success" onclick="downloadFromUrl('${data.content_url}')">📦 Download All Images (ZIP)</button>
+                    </div>
+                    <div class="multiple-results">
+                        ${imagesHtml}
+                    </div>
+                `;
+            } else {
+                // Single file - show image preview
+                const filename = data.content_url.split('/').pop();
+                resultContainer.innerHTML = `
+                    <div class="result-item">
+                        <img src="${data.content_url}" alt="Processed Image" onload="this.style.display='block'" style="display:none;">
+                        <div class="result-info">
+                            <h4>🎉 Background Replaced!</h4>
+                            <p><strong>Content ID:</strong> ${data.content_id}</p>
+                            <p><strong>Filename:</strong> ${filename}</p>
+                        </div>
+                        <button class="btn" onclick="downloadFromUrl('${data.content_url}')">📥 Download Image</button>
+                        <button class="btn btn-secondary" onclick="openInNewTab('${data.content_url}')">👁️ View Full Size</button>
+                    </div>
+                `;
             }
+
+            document.getElementById('resultsSection').style.display = 'block';
+        }
+
+        function downloadFromUrl(url) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function openInNewTab(url) {
+            window.open(url, '_blank');
         }
 
         function showMessage(text, type) {
@@ -484,17 +1105,39 @@
             }, 5000);
         }
 
+        function showBackgroundMessage(text, type) {
+            const message = document.getElementById('backgroundMessage');
+            message.textContent = text;
+            message.className = `message ${type}`;
+            message.style.display = 'block';
+            
+            setTimeout(() => {
+                message.style.display = 'none';
+            }, 3000);
+        }
+
         function hideMessage() {
             document.getElementById('message').style.display = 'none';
         }
 
-        // Check background count on load
-        window.onload = function() {
-            const bgCount = document.getElementById('bgCount').textContent;
-            if (bgCount === '0') {
-                showMessage('⚠️ No background images found! Please add images to the "backgrounds" folder.', 'error');
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+
+        // Handle background selection for "All Backgrounds" option
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up the all backgrounds option click handler
+            const allOption = document.querySelector('.all-option');
+            if (allOption) {
+                allOption.onclick = () => selectBackground('all');
             }
-        };
+        });
     </script>
 </body>
 </html>
